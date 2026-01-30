@@ -9,7 +9,19 @@ The solver minimizes sum of squared residuals, so each benchmark is expressed
 in residual form where ||residual(x*)||^2 = 0 at the known minimum.
 """
 
+import pytest
 import numpy as np
+
+
+# =============================================================================
+# Pytest Configuration
+# =============================================================================
+
+
+def pytest_configure(config):
+    """Register custom markers."""
+    config.addinivalue_line("markers", "robustness: mark test as robustness/edge case test")
+    config.addinivalue_line("markers", "slow: mark test as slow (run on limited CI matrix)")
 from numpy.typing import NDArray
 
 # =============================================================================
