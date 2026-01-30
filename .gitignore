@@ -76,3 +76,10 @@ dmypy.json
 
 # hatch-vcs generated version file
 src/jgss/_version.py
+
+
+# Claude Code / Agentic context
+.planning/
+.claude/
+CLAUDE.md
+nul
