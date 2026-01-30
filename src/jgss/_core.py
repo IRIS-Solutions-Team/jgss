@@ -8,7 +8,7 @@ This module orchestrates the three phases of Jacobian-Guided Subspace Search:
 The solve() function is the main public API of the jgss package.
 """
 
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Callable, List, Optional, Tuple
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -23,9 +23,7 @@ def solve(
     residual_fn: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     x0: ArrayLike,
     *,
-    jacobian_fn: Optional[
-        Callable[[NDArray[np.float64]], NDArray[np.float64]]
-    ] = None,
+    jacobian_fn: Optional[Callable[[NDArray[np.float64]], NDArray[np.float64]]] = None,
     tol: float = 1e-8,
     maxiter: int = 500,
     k_subspace: int = 30,
@@ -122,9 +120,7 @@ def solve(
     if history:
         original_callback = callback
 
-        def tracking_callback(
-            x: NDArray[np.float64], f: NDArray[np.float64]
-        ) -> None:
+        def tracking_callback(x: NDArray[np.float64], f: NDArray[np.float64]) -> None:
             history_list.append(x.copy())
             if original_callback is not None:
                 original_callback(x, f)
@@ -137,9 +133,7 @@ def solve(
     if verbose >= 2:
         print(f"[JGSS] Phase 1: Computing Jacobian at initial guess (n={n})")
 
-    J, nfev_jac, njev_jac = compute_jacobian(
-        residual_fn, x0, jacobian_fn
-    )
+    J, nfev_jac, njev_jac = compute_jacobian(residual_fn, x0, jacobian_fn)
     total_nfev += nfev_jac
     total_njev += njev_jac
 
@@ -149,7 +143,9 @@ def solve(
     W, singular_values = extract_active_subspace(J, k_effective)
 
     if verbose >= 2:
-        condition_num = singular_values[0] / singular_values[-1] if len(singular_values) > 0 else float("inf")
+        condition_num = (
+            singular_values[0] / singular_values[-1] if len(singular_values) > 0 else float("inf")
+        )
         print(f"    Active subspace dimension: {k_effective}")
         print(f"    Condition number: {condition_num:.2e}")
         print(f"    Singular values: [{singular_values[0]:.2e}, ..., {singular_values[-1]:.2e}]")
@@ -212,9 +208,7 @@ def solve(
 
     if return_jacobian or success:
         # Compute final Jacobian for optimality measure
-        final_jac_computed, nfev_opt, njev_opt = compute_jacobian(
-            residual_fn, x_final, jacobian_fn
-        )
+        final_jac_computed, nfev_opt, njev_opt = compute_jacobian(residual_fn, x_final, jacobian_fn)
         total_nfev += nfev_opt
         total_njev += njev_opt
 

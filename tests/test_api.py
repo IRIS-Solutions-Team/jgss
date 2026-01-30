@@ -7,12 +7,11 @@ This module validates the public API of the jgss package:
 - Verbose output behavior at all levels
 """
 
-import pytest
 import numpy as np
+import pytest
 
-from jgss import solve, SolverConfig, SolverResult
-from tests.conftest import rosenbrock_residual, ROSENBROCK_X0
-
+from jgss import SolverConfig, solve
+from tests.conftest import ROSENBROCK_X0, rosenbrock_residual
 
 # =============================================================================
 # SolverResult Tests

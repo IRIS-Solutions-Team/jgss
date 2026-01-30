@@ -9,29 +9,28 @@ Tests:
 - High-dimensional: 10D and 100D Rosenbrock
 """
 
-import pytest
 import numpy as np
+import pytest
 from numpy.testing import assert_allclose
 
 from jgss import solve
 from tests.conftest import (
-    rosenbrock_residual,
-    powell_residual,
-    beale_residual,
-    himmelblau_residual,
-    booth_residual,
-    ROSENBROCK_X0,
-    POWELL_X0,
-    BEALE_X0,
-    HIMMELBLAU_X0,
-    BOOTH_X0,
-    ROSENBROCK_SOLUTION,
-    POWELL_SOLUTION,
     BEALE_SOLUTION,
-    HIMMELBLAU_SOLUTION,
+    BEALE_X0,
     BOOTH_SOLUTION,
+    BOOTH_X0,
+    HIMMELBLAU_SOLUTION,
+    HIMMELBLAU_X0,
+    POWELL_SOLUTION,
+    POWELL_X0,
+    ROSENBROCK_SOLUTION,
+    ROSENBROCK_X0,
+    beale_residual,
+    booth_residual,
+    himmelblau_residual,
+    powell_residual,
+    rosenbrock_residual,
 )
-
 
 # =============================================================================
 # Benchmark Test Data

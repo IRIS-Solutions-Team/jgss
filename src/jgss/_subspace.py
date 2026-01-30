@@ -15,9 +15,7 @@ from numpy.typing import NDArray
 def compute_jacobian(
     residual_fn: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     x: NDArray[np.float64],
-    jacobian_fn: Optional[
-        Callable[[NDArray[np.float64]], NDArray[np.float64]]
-    ] = None,
+    jacobian_fn: Optional[Callable[[NDArray[np.float64]], NDArray[np.float64]]] = None,
     epsilon: float = 1e-8,
 ) -> Tuple[NDArray[np.float64], int, int]:
     """Compute the Jacobian matrix of a residual function.

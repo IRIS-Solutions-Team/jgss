@@ -15,9 +15,7 @@ from scipy.optimize import least_squares
 def levenberg_marquardt(
     residual_fn: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     x0: NDArray[np.float64],
-    jacobian_fn: Optional[
-        Callable[[NDArray[np.float64]], NDArray[np.float64]]
-    ] = None,
+    jacobian_fn: Optional[Callable[[NDArray[np.float64]], NDArray[np.float64]]] = None,
     tol: float = 1e-8,
     maxiter: int = 500,
     bounds: Optional[Tuple[NDArray[np.float64], NDArray[np.float64]]] = None,

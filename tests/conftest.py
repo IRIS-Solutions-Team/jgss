@@ -12,7 +12,6 @@ in residual form where ||residual(x*)||^2 = 0 at the known minimum.
 import numpy as np
 from numpy.typing import NDArray
 
-
 # =============================================================================
 # Pytest Configuration
 # =============================================================================
@@ -20,12 +19,9 @@ from numpy.typing import NDArray
 
 def pytest_configure(config):
     """Register custom markers."""
-    config.addinivalue_line(
-        "markers", "robustness: mark test as robustness/edge case test"
-    )
-    config.addinivalue_line(
-        "markers", "slow: mark test as slow (run on limited CI matrix)"
-    )
+    config.addinivalue_line("markers", "robustness: mark test as robustness/edge case test")
+    config.addinivalue_line("markers", "slow: mark test as slow (run on limited CI matrix)")
+
 
 # =============================================================================
 # Benchmark Residual Functions
@@ -127,6 +123,6 @@ BOOTH_SOLUTION = np.array([1.0, 3.0])
 
 ROSENBROCK_X0 = np.array([0.0, 0.0])
 POWELL_X0 = np.array([3.0, -1.0, 0.0, 1.0])
-BEALE_X0 = np.array([0.0, 0.0])
+BEALE_X0 = np.array([1.0, 0.5])  # Start closer to (3, 0.5) minimum
 HIMMELBLAU_X0 = np.array([2.0, 1.5])  # Start closer to (3, 2) minimum
 BOOTH_X0 = np.array([0.0, 0.0])

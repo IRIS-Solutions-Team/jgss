@@ -46,7 +46,6 @@ def find_basin(
             - nfev: Number of function evaluations performed.
     """
     x0 = np.asarray(x0, dtype=np.float64).copy()
-    n = len(x0)
     k = W.shape[1]  # Subspace dimension
 
     # Validate bounds

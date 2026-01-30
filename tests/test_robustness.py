@@ -1,7 +1,7 @@
 """Robustness tests for edge cases and ill-conditioned problems."""
 
-import pytest
 import numpy as np
+import pytest
 from numpy.testing import assert_allclose
 
 from jgss import solve
