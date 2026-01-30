@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+        numpy-version: ["<2.0", ">=2.0"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install package and test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[test]"
+
+      - name: Install specific NumPy version
+        run: |
+          pip install 'numpy${{ matrix.numpy-version }}'
+
+      - name: Show versions
+        run: |
+          python -c "import numpy; print(f'NumPy {numpy.__version__}')"
+          python -c "import scipy; print(f'SciPy {scipy.__version__}')"
+          python -c "import jgss; print(f'jgss {jgss.__version__}')"
+
+      - name: Run tests
+        run: |
+          pytest tests/ -v --tb=short -m "not slow"
+
+      - name: Run slow tests
+        if: matrix.python-version == '3.12' && matrix.numpy-version == '>=2.0'
+        run: |
+          pytest tests/ -v --tb=short -m "slow"
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Run ruff check
+        run: ruff check src/ tests/
+
+      - name: Run ruff format check
+        run: ruff format --check src/ tests/
