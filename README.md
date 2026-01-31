@@ -1,4 +1,4 @@
-# jgss
+# Jacobian-Guided Subspace Search (JGSS)
 
 JGSS nonlinear solver for DSGE models.
 
