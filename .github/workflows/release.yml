@@ -1,0 +1,99 @@
+# GitHub Actions release workflow for PyPI publishing via Trusted Publishing
+# Source: https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+        numpy-version: ["<2.0", ">=2.0"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install package and test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[test]"
+
+      - name: Install specific NumPy version
+        run: |
+          pip install 'numpy${{ matrix.numpy-version }}'
+
+      - name: Show versions
+        run: |
+          python -c "import numpy; print(f'NumPy {numpy.__version__}')"
+          python -c "import scipy; print(f'SciPy {scipy.__version__}')"
+          python -c "import jgss; print(f'jgss {jgss.__version__}')"
+
+      - name: Run tests
+        run: |
+          pytest tests/ -v --tb=short -m "not slow"
+
+      - name: Run slow tests
+        if: matrix.python-version == '3.12' && matrix.numpy-version == '>=2.0'
+        run: |
+          pytest tests/ -v --tb=short -m "slow"
+
+  build:
+    name: Build distribution
+    needs: [test]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history required for hatch-vcs version detection
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build
+        run: pip install build
+
+      - name: Build package
+        run: python -m build
+
+      - name: Upload distribution artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+  publish-pypi:
+    name: Publish to PyPI
+    needs: [build]
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/jgss
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Download distribution artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
