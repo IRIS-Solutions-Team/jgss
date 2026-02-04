@@ -59,7 +59,18 @@ def test_benchmark_convergence(name, func, x0, expected):
     """Test solve() converges to known minimum for benchmark functions."""
     result = solve(func, x0=x0, verbose=-1)
     assert result.success, f"{name} failed: {result.message}"
-    assert_allclose(result.x, expected, rtol=0, atol=1e-8)
+
+    # For multi-modal functions (expected is a list), accept any valid minimum
+    if isinstance(expected, list):
+        matched = any(
+            np.allclose(result.x, sol, rtol=0, atol=1e-6) for sol in expected
+        )
+        assert matched, (
+            f"{name} converged to {result.x}, which is not a known minimum. "
+            f"Known minima: {expected}"
+        )
+    else:
+        assert_allclose(result.x, expected, rtol=0, atol=1e-8)
 
 
 # =============================================================================

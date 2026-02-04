@@ -113,7 +113,14 @@ def booth_residual(x: NDArray[np.float64]) -> NDArray[np.float64]:
 ROSENBROCK_SOLUTION = np.array([1.0, 1.0])
 POWELL_SOLUTION = np.array([0.0, 0.0, 0.0, 0.0])
 BEALE_SOLUTION = np.array([3.0, 0.5])
-HIMMELBLAU_SOLUTION = np.array([3.0, 2.0])
+# Himmelblau has 4 global minima - all are valid solutions
+HIMMELBLAU_SOLUTIONS = [
+    np.array([3.0, 2.0]),
+    np.array([-2.805118, 3.131312]),
+    np.array([-3.779310, -3.283186]),
+    np.array([3.584428, -1.848126]),
+]
+HIMMELBLAU_SOLUTION = HIMMELBLAU_SOLUTIONS  # For test parametrization
 BOOTH_SOLUTION = np.array([1.0, 3.0])
 
 
