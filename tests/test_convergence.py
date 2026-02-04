@@ -62,9 +62,7 @@ def test_benchmark_convergence(name, func, x0, expected):
 
     # For multi-modal functions (expected is a list), accept any valid minimum
     if isinstance(expected, list):
-        matched = any(
-            np.allclose(result.x, sol, rtol=0, atol=1e-6) for sol in expected
-        )
+        matched = any(np.allclose(result.x, sol, rtol=0, atol=1e-6) for sol in expected)
         assert matched, (
             f"{name} converged to {result.x}, which is not a known minimum. "
             f"Known minima: {expected}"
