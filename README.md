@@ -105,6 +105,34 @@ print(f"Solution: {result.x}")
 print(f"Jacobian evaluations: {result.njev}")
 ```
 
+### Multi-Restart for DSGE Models
+
+```python
+import numpy as np
+from jgss import solve
+
+def dsge_residual(x):
+    """DSGE-like system with multiple scales."""
+    return np.array([
+        0.01 * x[0] - 0.03,      # Interest rate (~0.03)
+        1000 * x[1] - 5000,       # GDP (~5.0)
+        x[2]**2 - x[0] * x[1],   # Nonlinear coupling
+    ])
+
+result = solve(
+    dsge_residual,
+    x0=np.array([0.01, 4.0, 0.1]),
+    n_restarts=5,                    # 5 independent LHS draws
+    clip_bounds=(-10.0, 30.0),       # Keep variables in range
+    seed=42,                         # Reproducible
+    verbose=0,
+)
+
+print(f"Converged: {result.success}")
+print(f"Solution: {result.x}")
+print(f"Restarts used: see nfev={result.nfev}")
+```
+
 ### Advanced: Bounds and Callbacks
 
 ```python
@@ -157,7 +185,9 @@ result = solve(residual_fn, x0, **options)
 | `k_subspace` | `int` | `30` | Dimension of active subspace for global search |
 | `n_samples` | `int` | `600` | Number of Latin Hypercube samples for basin finding |
 | `bounds` | `tuple` | `None` | Optional `(lower, upper)` bounds, each of shape `(n,)` |
-| `seed` | `int` | `None` | Random seed for reproducibility |
+| `n_restarts` | `int` | `5` | Number of independent restart attempts with different LHS seeds |
+| `clip_bounds` | `tuple` | `None` | Optional `(lower, upper)` for soft variable clamping (applied via `np.clip`) |
+| `seed` | `int` | `None` | Random seed for reproducibility. Restart *i* uses `seed+i` |
 | `verbose` | `int` | `0` | Verbosity: `-1`=silent, `0`=summary, `1`=iterations, `2`=debug |
 | `callback` | `Callable` | `None` | Function `callback(x, f)` called at each evaluation |
 | `history` | `bool` | `False` | If `True`, include solution iterates in result |
@@ -186,6 +216,8 @@ print(config.k_subspace) # 30
 | `maxiter` | `int` | `500` | Maximum solver iterations |
 | `k_subspace` | `int` | `30` | Dimension of Jacobian Guided subspace |
 | `n_samples` | `int` | `600` | Number of Latin Hypercube samples |
+| `n_restarts` | `int` | `5` | Number of independent restart attempts |
+| `clip_bounds` | `tuple` | `None` | Soft variable clamping bounds |
 | `seed` | `int` | `None` | Random seed for reproducibility |
 | `verbose` | `int` | `0` | Verbosity level |
 
@@ -222,10 +254,13 @@ print('success' in result)  # True
 
 JGSS (Jacobian Guided Subspace Search) is a hybrid global-local optimization algorithm designed for high-dimensional nonlinear systems common in macroeconomic modeling.
 
-The algorithm operates in three phases:
+The algorithm operates in three phases, repeated across multiple restarts:
+
 1. **Jacobian Analysis** - Computes the Jacobian at the initial guess and uses SVD to identify an active subspace where the system is most sensitive to changes
 2. **Basin Finding** - Uses Latin Hypercube Sampling within the active subspace to find a starting point in a promising convergence basin
 3. **Local Convergence** - Applies Levenberg-Marquardt to refine the solution to machine precision
+
+By default, JGSS runs 5 independent restarts with different random seeds for the LHS basin search. Each restart explores a different region of the subspace, and the best result (lowest residual norm) is kept. If no restart converges, a **scaled LM polish** normalizes variables by their characteristic magnitudes and runs a final LM pass in scaled space — this dramatically improves conditioning for multi-scale DSGE systems.
 
 This approach is particularly effective for DSGE and macroeconomic models where the solution space is high-dimensional but the active dynamics lie in a lower-dimensional manifold.
 

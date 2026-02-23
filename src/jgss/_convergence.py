@@ -11,6 +11,8 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import least_squares
 
+from jgss._scaling import DiagonalScaler
+
 
 def levenberg_marquardt(
     residual_fn: Callable[[NDArray[np.float64]], NDArray[np.float64]],
@@ -137,5 +139,82 @@ def levenberg_marquardt(
         status = "CONVERGED" if success else "NOT CONVERGED"
         print(f"    [LM] {status}: SSR={ssr:.4e}, nfev={nfev}, njev={njev}")
         print(f"    [LM] {message}")
+
+    return x_final, success, message, nfev, njev, fun
+
+
+def scaled_lm_polish(
+    residual_fn: Callable[[NDArray[np.float64]], NDArray[np.float64]],
+    x0: NDArray[np.float64],
+    jacobian_fn: Optional[Callable[[NDArray[np.float64]], NDArray[np.float64]]] = None,
+    tol: float = 1e-8,
+    maxiter: int = 500,
+) -> Tuple[NDArray[np.float64], bool, str, int, int, NDArray[np.float64]]:
+    """Run Levenberg-Marquardt in diagonally-scaled variable space.
+
+    Creates a DiagonalScaler from x0 (scales = max(|x0|, 1.0)), transforms
+    the problem into scaled coordinates, runs unbounded LM, and returns
+    the solution in original coordinates.
+
+    This improves conditioning for problems where variables span different
+    orders of magnitude (common in DSGE models).
+
+    Returns:
+        Same tuple signature as levenberg_marquardt().
+    """
+    x0 = np.asarray(x0, dtype=np.float64).copy()
+    n = len(x0)
+
+    scaler = DiagonalScaler.from_x0(x0)
+    x_scaled = scaler.scale(x0)
+
+    def fun_scaled(xs: NDArray[np.float64]) -> NDArray[np.float64]:
+        return residual_fn(scaler.unscale(xs))
+
+    if jacobian_fn is not None:
+
+        def jac_wrapper(x: NDArray[np.float64]) -> NDArray[np.float64]:
+            J = jacobian_fn(x)
+            if hasattr(J, "toarray"):
+                J = J.toarray()
+            return np.asarray(J, dtype=np.float64)
+
+        def jac_scaled(xs: NDArray[np.float64]) -> NDArray[np.float64]:
+            J_original = jac_wrapper(scaler.unscale(xs))
+            return J_original * scaler.scales[np.newaxis, :]
+
+        jac: Union[str, Callable[[NDArray[np.float64]], NDArray[np.float64]]] = jac_scaled
+    else:
+        jac = "2-point"
+
+    max_nfev = maxiter * n
+
+    try:
+        result = least_squares(
+            fun_scaled,
+            x_scaled,
+            jac=jac,
+            method="lm",
+            ftol=tol,
+            xtol=tol,
+            gtol=tol,
+            max_nfev=max_nfev,
+            verbose=0,
+        )
+
+        x_final = scaler.unscale(result.x)
+        success = result.success
+        message = result.message
+        nfev = result.nfev
+        njev = result.njev if hasattr(result, "njev") and result.njev is not None else 0
+        fun = residual_fn(x_final)
+
+    except Exception as e:
+        x_final = x0.copy()
+        success = False
+        message = f"Scaled LM polish failed: {str(e)}"
+        nfev = 0
+        njev = 0
+        fun = residual_fn(x0)
 
     return x_final, success, message, nfev, njev, fun

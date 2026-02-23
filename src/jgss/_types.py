@@ -8,10 +8,10 @@ These types form the public API contract for the JGSS solver.
 """
 
 from dataclasses import dataclass, field, fields
-from typing import Iterator, List, Optional
+from typing import Iterator, List, Optional, Tuple
 
 import numpy as np
-from numpy.typing import NDArray
+from numpy.typing import ArrayLike, NDArray
 
 
 @dataclass(frozen=True)
@@ -26,6 +26,8 @@ class SolverConfig:
         maxiter: Maximum number of solver iterations. Default 500.
         k_subspace: Dimension of the Jacobian-guided subspace. Default 30.
         n_samples: Number of Latin Hypercube samples for global search. Default 600.
+        n_restarts: Number of independent restart attempts. Default 5.
+        clip_bounds: Optional (lower, upper) for soft variable clamping. Default None.
         seed: Random seed for reproducibility. Default None (non-deterministic).
         verbose: Verbosity level (0=silent, 1=summary, 2=iterations). Default 0.
     """
@@ -34,6 +36,8 @@ class SolverConfig:
     maxiter: int = 500
     k_subspace: int = 30
     n_samples: int = 600
+    n_restarts: int = 5
+    clip_bounds: Optional[Tuple[ArrayLike, ArrayLike]] = None
     seed: Optional[int] = None
     verbose: int = 0
 

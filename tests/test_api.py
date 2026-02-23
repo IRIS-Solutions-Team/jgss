@@ -89,8 +89,17 @@ def test_solver_config_defaults():
     assert config.n_samples == 600
     assert config.tol == 1e-8
     assert config.maxiter == 500
+    assert config.n_restarts == 5
+    assert config.clip_bounds is None
     assert config.seed is None
     assert config.verbose == 0
+
+
+def test_solver_config_new_fields():
+    """Verify custom n_restarts and clip_bounds are accepted."""
+    config = SolverConfig(n_restarts=3, clip_bounds=([0.0], [1.0]))
+    assert config.n_restarts == 3
+    assert config.clip_bounds is not None
 
 
 def test_solver_config_is_immutable():

@@ -106,3 +106,26 @@ def test_rosenbrock_high_dimensional(n_dims):
     expected = np.ones(n_dims)
     assert result.success, f"{n_dims}D Rosenbrock failed: {result.message}"
     assert_allclose(result.x, expected, rtol=0, atol=1e-8)
+
+
+# =============================================================================
+# Multi-Restart Tests
+# =============================================================================
+
+
+@pytest.mark.parametrize(
+    "name,func,x0,expected",
+    BENCHMARKS,
+    ids=[b[0] for b in BENCHMARKS],
+)
+def test_single_restart_backward_compat(name, func, x0, expected):
+    """n_restarts=1 converges on all benchmarks (v1.0.0 compat)."""
+    result = solve(func, x0=x0, n_restarts=1, verbose=-1)
+    assert result.success, f"{name} failed with n_restarts=1: {result.message}"
+
+
+def test_multi_restart_improves_or_equals():
+    """n_restarts=5 residual <= n_restarts=1 residual."""
+    result_1 = solve(rosenbrock_residual, x0=ROSENBROCK_X0, n_restarts=1, seed=0, verbose=-1)
+    result_5 = solve(rosenbrock_residual, x0=ROSENBROCK_X0, n_restarts=5, seed=0, verbose=-1)
+    assert result_5.residual_norm <= result_1.residual_norm + 1e-15
